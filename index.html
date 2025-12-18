@@ -208,14 +208,14 @@
         const tbody = document.querySelector('#reportTable tbody');
         const row = document.createElement('tr');
         
-        row.innerHTML = "`
-            <td><input type=\"checkbox\" class=\"row-checkbox\"></td>
+        row.innerHTML = `
+            <td><input type="checkbox" class="row-checkbox"></td>
             <td>${item.year}</td>
             <td>${item.make}</td>
             <td>${item.model}</td>
             <td>${item.country}</td>
-            <td style=\"font-family:monospace;\">${item.vin}</td>
-        `";
+            <td style="font-family:monospace;">${item.vin}</td>
+        `;
         
         // Insert at the top of the table
         tbody.insertBefore(row, tbody.firstChild);
