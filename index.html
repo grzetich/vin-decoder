@@ -284,6 +284,10 @@
         });
 
         printWindow.document.write('</tbody></table>');
+        printWindow.document.write('<div class="footer-info" style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #ccc; font-size: 0.8rem; color: #666; line-height: 1.5;">');
+        printWindow.document.write('<p class="attribution" style="font-weight: bold; color: #444;">Data from NHTSA VIN decoder at <a href="https://www.nhtsa.gov/vin-decoder" target="_blank">https://www.nhtsa.gov/vin-decoder</a></p>');
+        printWindow.document.write('<p class="disclaimer" style="font-style: italic;"><strong>Note:</strong> The information displayed through the VIN decoder is reported by the manufacturer. If you have further questions regarding this information, please contact the vehicle manufacturer. In addition, more information may be available on a label affixed to the vehicle.</p>');
+        printWindow.document.write('</div>');
         printWindow.document.write('</body></html>');
         printWindow.document.close();
         printWindow.print();
