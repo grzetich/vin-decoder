@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIN Build & Report Tool</title>
+    <style>
+        :root { --primary: #007bff; --success: #28a745; --danger: #dc3545; --bg: #f4f4f9; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 2rem; background-color: var(--bg); color: #333; }
+        
+        /* Layout */
+        .container { max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; min-height: 90vh; }
+        
+        /* Search Card */
+        .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; margin-bottom: 2rem; }
+        input { width: 70%; padding: 12px; margin-right: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; text-transform: uppercase; }
+        button { padding: 12px 24px; background-color: var(--primary); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; transition: 0.2s; }
+        button:hover { background-color: #0056b3; }
+        button:disabled { background-color: #ccc; cursor: not-allowed; }
+
+        /* Search Result Visuals */
+        #currentResult { margin-top: 2rem; display: none; padding-top: 2rem; border-top: 1px solid #eee; }
+        .icon { font-size: 4rem; display: block; margin-bottom: 0.5rem; }
+        .big-text { font-size: 1.5rem; font-weight: bold; }
+        .sub-text { color: #666; margin-top: 0.5rem; }
+        .usa { color: var(--success); }
+        .foreign { color: var(--danger); }
+
+        /* Report Table Section */
+        .report-section { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); flex: 1; }
+        .report-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .action-btns button { font-size: 14px; padding: 8px 16px; margin-left: 10px; }
+        .btn-csv { background-color: #28a745; }
+        .btn-csv:hover { background-color: #218838; }
+        .btn-print { background-color: #6c757d; }
+        .btn-print:hover { background-color: #5a6268; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #eee; }
+        th { background-color: #f8f9fa; color: #555; }
+        tr:hover { background-color: #f1f1f1; }
+
+        /* Footer & Disclaimer Styling */
+        .footer-info { 
+            margin-top: 2rem; 
+            padding-top: 1rem; 
+            border-top: 1px solid #ccc; 
+            font-size: 0.8rem; 
+            color: #666; 
+            line-height: 1.5;
+        }
+        .footer-info p { margin: 0.5rem 0; }
+        .attribution { font-weight: bold; color: #444; }
+        .disclaimer { font-style: italic; }
+
+        /* Print Styles */
+        @media print {
+            body { background: white; padding: 0; }
+            .container { max-width: 100%; margin: 0; }
+            .card, .action-btns, input, #searchBtn { display: none; } /* Hide search box & buttons */
+            .report-section { box-shadow: none; padding: 0; }
+            #currentResult { display: none; }
+            
+            /* Ensure footer prints at the bottom */
+            .footer-info { 
+                position: fixed; 
+                bottom: 0; 
+                left: 0;
+                width: 100%; 
+                background: white;
+                padding-bottom: 10px;
+                border-top: 1px solid #000;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    
+    <div class="card">
+        <h2>Ì∑∫Ì∑∏ US Build Checker</h2>
+        <div style="display:flex; justify-content:center;">
+            <input type="text" id="vinInput" placeholder="Enter VIN (17 characters)" maxlength="17">
+            <button onclick="checkVin()" id="searchBtn">Check</button>
+        </div>
+
+        <div id="currentResult">
+            <span id="statusIcon" class="icon"></span>
+            <div id="resultTitle" class="big-text"></div>
+            <div id="resultDetails" class="sub-text"></div>
+        </div>
+    </div>
+
+    <div class="report-section">
+        <div class="report-header">
+            <h3>Session Report</h3>
+            <div class="action-btns">
+                <button class="btn-print" onclick="window.print()">Ì∂®Ô∏è Print</button>
+                <button class="btn-csv" onclick="downloadCSV()">‚¨áÔ∏è Export CSV</button>
+            </div>
+        </div>
+        
+        <table id="reportTable">
+            <thead>
+                <tr>
+                    <th>Year</th>
+                    <th>Make</th>
+                    <th>Model</th>
+                    <th>Country</th>
+                    <th>VIN</th>
+                </tr>
+            </thead>
+            <tbody>
+                </tbody>
+        </table>
+
+        <div class="footer-info">
+            <p class="attribution">
+                Data from NHTSA VIN decoder at <a href="https://www.nhtsa.gov/vin-decoder" target="_blank">https://www.nhtsa.gov/vin-decoder</a>
+            </p>
+            <p class="disclaimer">
+                <strong>Note:</strong> The information displayed through the VIN decoder is reported by the manufacturer. If you have further questions regarding this information, please contact the vehicle manufacturer. In addition, more information may be available on a label affixed to the vehicle.
+            </p>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // Store scanned vehicles here
+    let sessionData = [];
+
+    async function checkVin() {
+        const vinInput = document.getElementById('vinInput');
+        const vin = vinInput.value.trim().toUpperCase();
+        const btn = document.getElementById('searchBtn');
+
+        if (vin.length < 5) {
+            alert("Please enter a valid VIN.");
+            return;
+        }
+
+        // UI Loading
+        btn.textContent = "Loading...";
+        btn.disabled = true;
+
+        try {
+            const response = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValues/${vin}?format=json`);
+            const data = await response.json();
+            const vehicle = data.Results[0];
+
+            if (!vehicle) throw new Error("No data found");
+
+            // Extract Fields
+            const make = vehicle.Make || "Unknown";
+            const model = vehicle.Model || "Unknown";
+            const year = vehicle.ModelYear || "Unknown";
+            const country = vehicle.PlantCountry || "Unknown Country";
+            
+            // Logic: Check if USA
+            const isUSA = country.toUpperCase().includes("UNITED STATES");
+
+            // Update Visual Result (Top Card)
+            updateVisualResult(isUSA, make, model, year, country);
+
+            // Add to Report Data
+            const record = { year, make, model, country, vin };
+            sessionData.push(record);
+            
+            // Update Report Table
+            addToTable(record);
+
+            // Clear Input
+            vinInput.value = "";
+
+        } catch (error) {
+            alert("Error fetching data. Check VIN.");
+            console.error(error);
+        } finally {
+            btn.textContent = "Check";
+            btn.disabled = false;
+        }
+    }
+
+    function updateVisualResult(isUSA, make, model, year, country) {
+        const resDiv = document.getElementById('currentResult');
+        const icon = document.getElementById('statusIcon');
+        const title = document.getElementById('resultTitle');
+        const details = document.getElementById('resultDetails');
+
+        resDiv.style.display = 'block';
+        title.textContent = `${year} ${make} ${model}`;
+        details.textContent = `Built in: ${country}`;
+
+        if (isUSA) {
+            icon.textContent = "‚úÖ";
+            icon.className = "icon usa";
+        } else {
+            icon.textContent = "‚ùå";
+            icon.className = "icon foreign";
+        }
+    }
+
+    function addToTable(item) {
+        const tbody = document.querySelector('#reportTable tbody');
+        const row = document.createElement('tr');
+        
+        row.innerHTML = `
+            <td>${item.year}</td>
+            <td>${item.make}</td>
+            <td>${item.model}</td>
+            <td>${item.country}</td>
+            <td style="font-family:monospace;">${item.vin}</td>
+        `;
+        
+        // Insert at the top of the table
+        tbody.insertBefore(row, tbody.firstChild);
+    }
+
+    function downloadCSV() {
+        if (sessionData.length === 0) {
+            alert("No data to export yet.");
+            return;
+        }
+
+        // Create CSV Content
+        let csvContent = "data:text/csv;charset=utf-8,";
+        csvContent += "Year,Make,Model,Country,VIN\n"; // Header
+
+        sessionData.forEach(row => {
+            const rowString = `${row.year},${row.make},${row.model},"${row.country}",${row.vin}`;
+            csvContent += rowString + "\n";
+        });
+
+        // Trigger Download
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "vin_report.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+</script>
+
+</body>
+</html>
