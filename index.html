@@ -95,9 +95,9 @@
 
     <div class="report-section">
         <div class="report-header">
-            <h3>Session Report</h3>
+            <h3>Report</h3>
             <div class="action-btns">
-                <button class="btn-print" onclick="window.print()">🖨️ Print</button>
+                <button class="btn-print" onclick="printReport()">🖨️ Print</button>
                 <button class="btn-csv" onclick="downloadCSV()">⬇️ Export CSV</button>
             </div>
         </div>
@@ -105,6 +105,7 @@
         <table id="reportTable">
             <thead>
                 <tr>
+                    <th><input type="checkbox" onchange="toggleSelectAll(this)"></th>
                     <th>Year</th>
                     <th>Make</th>
                     <th>Model</th>
@@ -207,21 +208,41 @@
         const tbody = document.querySelector('#reportTable tbody');
         const row = document.createElement('tr');
         
-        row.innerHTML = `
+        row.innerHTML = "`
+            <td><input type=\"checkbox\" class=\"row-checkbox\"></td>
             <td>${item.year}</td>
             <td>${item.make}</td>
             <td>${item.model}</td>
             <td>${item.country}</td>
-            <td style="font-family:monospace;">${item.vin}</td>
-        `;
+            <td style=\"font-family:monospace;\">${item.vin}</td>
+        `";
         
         // Insert at the top of the table
         tbody.insertBefore(row, tbody.firstChild);
     }
 
+    function toggleSelectAll(source) {
+        const checkboxes = document.querySelectorAll('.row-checkbox');
+        for (let i = 0; i < checkboxes.length; i++) {
+            checkboxes[i].checked = source.checked;
+        }
+    }
+
+    function getSelectedData() {
+        const selectedData = [];
+        const checkboxes = document.querySelectorAll('.row-checkbox');
+        for (let i = 0; i < checkboxes.length; i++) {
+            if (checkboxes[i].checked) {
+                selectedData.push(sessionData[sessionData.length - 1 - i]);
+            }
+        }
+        return selectedData;
+    }
+
     function downloadCSV() {
-        if (sessionData.length === 0) {
-            alert("No data to export yet.");
+        const dataToExport = getSelectedData();
+        if (dataToExport.length === 0) {
+            alert("No rows selected to export.");
             return;
         }
 
@@ -229,7 +250,7 @@
         let csvContent = "data:text/csv;charset=utf-8,";
         csvContent += "Year,Make,Model,Country,VIN\n"; // Header
 
-        sessionData.forEach(row => {
+        dataToExport.forEach(row => {
             const rowString = `${row.year},${row.make},${row.model},"${row.country}",${row.vin}`;
             csvContent += rowString + "\n";
         });
@@ -242,6 +263,30 @@
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+    }
+
+    function printReport() {
+        const dataToPrint = getSelectedData();
+        if (dataToPrint.length === 0) {
+            alert("No rows selected to print.");
+            return;
+        }
+
+        const printWindow = window.open('', '', 'height=600,width=800');
+        printWindow.document.write('<html><head><title>Print Report</title>');
+        printWindow.document.write('<style>table { width: 100%; border-collapse: collapse; } th, td { text-align: left; padding: 8px; border-bottom: 1px solid #ddd; }</style>');
+        printWindow.document.write('</head><body>');
+        printWindow.document.write('<h1>Report</h1>');
+        printWindow.document.write('<table><thead><tr><th>Year</th><th>Make</th><th>Model</th><th>Country</th><th>VIN</th></tr></thead><tbody>');
+
+        dataToPrint.forEach(item => {
+            printWindow.document.write(`<tr><td>${item.year}</td><td>${item.make}</td><td>${item.model}</td><td>${item.country}</td><td>${item.vin}</td></tr>`);
+        });
+
+        printWindow.document.write('</tbody></table>');
+        printWindow.document.write('</body></html>');
+        printWindow.document.close();
+        printWindow.print();
     }
 </script>
 
