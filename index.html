@@ -208,17 +208,17 @@
     function addToTable(item) {
         const tbody = document.querySelector('#reportTable tbody');
         const row = document.createElement('tr');
-        const nhtsaLink = `https://vpic.nhtsa.dot.gov/decoder/Decoder/DecodeVin?vin=${item.vin}`;
+        const nhtsaLink = `https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValues/${item.vin}?format=json`;
         
-        row.innerHTML = `
-            <td><input type="checkbox" class="row-checkbox"></td>
+        row.innerHTML = "`
+            <td><input type=\"checkbox\" class=\"row-checkbox\"></td>
             <td>${item.year}</td>
             <td>${item.make}</td>
             <td>${item.model}</td>
             <td>${item.country}</td>
-            <td style="font-family:monospace;">${item.vin}</td>
-            <td><a href="${nhtsaLink}" target="_blank">Link</a></td>
-        `;
+            <td style=\"font-family:monospace;\">${item.vin}</td>
+            <td><a href=\"${nhtsaLink}\" target=\"_blank\">Link</a></td>
+        `";
         
         // Insert at the top of the table
         tbody.insertBefore(row, tbody.firstChild);
@@ -254,7 +254,7 @@
         csvContent += "Year,Make,Model,Country,VIN,NHTSA Link\n"; // Header
 
         dataToExport.forEach(row => {
-            const nhtsaLink = `https://vpic.nhtsa.dot.gov/decoder/Decoder/DecodeVin?vin=${row.vin}`;
+            const nhtsaLink = `https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValues/${row.vin}?format=json`;
             const rowString = `${row.year},${row.make},${row.model},"${row.country}",${row.vin},${nhtsaLink}`;
             csvContent += rowString + "\n";
         });
@@ -284,7 +284,7 @@
         printWindow.document.write('<table><thead><tr><th>Year</th><th>Make</th><th>Model</th><th>Country</th><th>VIN</th><th>NHTSA Link</th></tr></thead><tbody>');
 
         dataToPrint.forEach(item => {
-            const nhtsaLink = `https://vpic.nhtsa.dot.gov/decoder/Decoder/DecodeVin?vin=${item.vin}`;
+            const nhtsaLink = `https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValues/${item.vin}?format=json`;
             printWindow.document.write(`<tr><td>${item.year}</td><td>${item.make}</td><td>${item.model}</td><td>${item.country}</td><td>${item.vin}</td><td><a href="${nhtsaLink}" target="_blank">Link</a></td></tr>`);
         });
 
