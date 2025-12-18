@@ -111,6 +111,7 @@
                     <th>Model</th>
                     <th>Country</th>
                     <th>VIN</th>
+                    <th>NHTSA Link</th>
                 </tr>
             </thead>
             <tbody>
@@ -207,6 +208,7 @@
     function addToTable(item) {
         const tbody = document.querySelector('#reportTable tbody');
         const row = document.createElement('tr');
+        const nhtsaLink = `https://vpic.nhtsa.dot.gov/decoder/Decoder/DecodeVin?vin=${item.vin}`;
         
         row.innerHTML = `
             <td><input type="checkbox" class="row-checkbox"></td>
@@ -215,6 +217,7 @@
             <td>${item.model}</td>
             <td>${item.country}</td>
             <td style="font-family:monospace;">${item.vin}</td>
+            <td><a href="${nhtsaLink}" target="_blank">Link</a></td>
         `;
         
         // Insert at the top of the table
@@ -248,10 +251,11 @@
 
         // Create CSV Content
         let csvContent = "data:text/csv;charset=utf-8,";
-        csvContent += "Year,Make,Model,Country,VIN\n"; // Header
+        csvContent += "Year,Make,Model,Country,VIN,NHTSA Link\n"; // Header
 
         dataToExport.forEach(row => {
-            const rowString = `${row.year},${row.make},${row.model},"${row.country}",${row.vin}`;
+            const nhtsaLink = `https://vpic.nhtsa.dot.gov/decoder/Decoder/DecodeVin?vin=${row.vin}`;
+            const rowString = `${row.year},${row.make},${row.model},"${row.country}",${row.vin},${nhtsaLink}`;
             csvContent += rowString + "\n";
         });
 
@@ -277,10 +281,11 @@
         printWindow.document.write('<style>table { width: 100%; border-collapse: collapse; } th, td { text-align: left; padding: 8px; border-bottom: 1px solid #ddd; }</style>');
         printWindow.document.write('</head><body>');
         printWindow.document.write('<h1>Report</h1>');
-        printWindow.document.write('<table><thead><tr><th>Year</th><th>Make</th><th>Model</th><th>Country</th><th>VIN</th></tr></thead><tbody>');
+        printWindow.document.write('<table><thead><tr><th>Year</th><th>Make</th><th>Model</th><th>Country</th><th>VIN</th><th>NHTSA Link</th></tr></thead><tbody>');
 
         dataToPrint.forEach(item => {
-            printWindow.document.write(`<tr><td>${item.year}</td><td>${item.make}</td><td>${item.model}</td><td>${item.country}</td><td>${item.vin}</td></tr>`);
+            const nhtsaLink = `https://vpic.nhtsa.dot.gov/decoder/Decoder/DecodeVin?vin=${item.vin}`;
+            printWindow.document.write(`<tr><td>${item.year}</td><td>${item.make}</td><td>${item.model}</td><td>${item.country}</td><td>${item.vin}</td><td><a href="${nhtsaLink}" target="_blank">Link</a></td></tr>`);
         });
 
         printWindow.document.write('</tbody></table>');
