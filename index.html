@@ -195,7 +195,7 @@
         title.textContent = `${year} ${make} ${model}`;
         details.textContent = `Built in: ${country}`;
 
-        if (isUSA) {
+        if (isUSA && year === "2025") {
             icon.textContent = "✅";
             icon.className = "icon usa";
         } else {
